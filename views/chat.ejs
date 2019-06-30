@@ -1,0 +1,61 @@
+    <h1 class="text-center mb-3">Chat da Corujinha</h1>
+
+            <form id="chat">
+                <input type="text" class="input_chat" name="username" value=<%= user.name %> disabled></input>
+
+                <div class="messages" id="messages_chat"></div>
+
+                <script type="text/javascript">
+                    window.setInterval(function () {
+                        var elem = document.getElementById('messages_chat');
+                        elem.scrollTop = elem.scrollHeight;
+                    }, 500);
+                </script>
+
+                <input type="text" class="input_chat" id="input_message" name="message" placeholder="Digite a sua mensagem aqui"></input>
+
+                <button type="submit" id="button_chat">Enviar mensagem</button>
+            </form>
+            <a href="/dashboard">Voltar</a>
+            <script type="text/javascript">
+                var socket = io('http://localhost:3000')
+
+                function renderMessage(message) {
+                    $('.messages').append('<div class="message"><strong>' + message.author + '</strong>:' + message
+                        .message + '</div>')
+                }
+
+                socket.on('previousMessages', function (messages) {
+                    for (message of messages) {
+                        renderMessage(message)
+                    }
+                })
+
+
+
+                //pegando o que foi usando no emit la no server
+
+                socket.on('receivedMessage', function (message) {
+                    renderMessage(message) //mesmo receivedmessage, peguei o objetinho e e renderizo em todos.
+                })
+                $('#chat').submit(function (event) {
+                    event.preventDefault() //evita o envio do formulario
+                    var author = $('input[name=username]').val() //guarda numa variavel
+                    var message = $('input[name=message]').val() //guarda em outra variavel-var tem ecopo global
+                    if (author.length && message.length) {
+                        var messageObject = {
+                            author: author,
+                            message: message
+                        } //crio um objeto chave  evalor que constitui a mensagem, o objeto carrega autor+ menssagem
+                        //só crio esse objeto quando valido que existem, para isso conto o tamanho dele
+                        //se for maio que 0  já é um objeto
+
+
+                        renderMessage(messageObject)
+                        socket.emit('sendMessage', messageObject) //metodo emit do socket io dispara meu objeto 
+                    }
+                    
+                    //limpa input de mensagem após submit
+                    document.getElementById("input_message").value='';
+                })
+            </script>
